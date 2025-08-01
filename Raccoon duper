@@ -129,15 +129,6 @@ Tab:CreateToggle({
    end,
 })
 
--- Placeholder toggle
-Tab:CreateToggle({
-   Name = "Toggle Example",
-   CurrentValue = false,
-   Flag = "Toggle1",
-   Callback = function(Value)
-   end,
-})
-
 -- Combined Box ESP and Tracer ESP system
 local boxESPEnabled = false
 local tracerESPEnabled = false
