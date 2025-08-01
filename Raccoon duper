@@ -35,6 +35,7 @@ local Window = Rayfield:CreateWindow({
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local camera = workspace.CurrentCamera
 local connections = {}
 local Tab = Window:CreateTab("Universal", 4483362458)
@@ -228,4 +229,31 @@ Tab:CreateToggle({
       tracerESPEnabled = Value
       handleESPLoop()
    end,
+})
+
+-- Auto Clicker toggle
+local autoClickerEnabled = false
+local autoClickerConnection
+
+Tab:CreateToggle({
+    Name = "Auto Clicker",
+    CurrentValue = false,
+    Flag = "AutoClicker",
+    Callback = function(Value)
+        autoClickerEnabled = Value
+        if autoClickerEnabled then
+            autoClickerConnection = RunService.Heartbeat:Connect(function()
+                -- Simulate a click at the center of the screen every frame
+                local mouse = game.Players.LocalPlayer:GetMouse()
+                mouse1press()
+                wait(0.01) -- Delay 0.01 seconds between clicks
+                mouse1release()
+            end)
+        else
+            if autoClickerConnection then
+                autoClickerConnection:Disconnect()
+                autoClickerConnection = nil
+            end
+        end
+    end,
 })
