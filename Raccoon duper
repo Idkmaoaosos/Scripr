@@ -36,21 +36,19 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local connections = {}
 
--- Add highlight and username display
+-- Add white highlight + name label
 local function applyVisuals(character, player)
-	-- Highlight
 	if not character:FindFirstChild("WhiteHighlight") then
 		local highlight = Instance.new("Highlight")
 		highlight.Name = "WhiteHighlight"
-		highlight.FillColor = Color3.new(1, 1, 1) -- White
-		highlight.FillTransparency = 0.75
-		highlight.OutlineColor = Color3.new(0, 0, 0)
-		highlight.OutlineTransparency = 0.75
+		highlight.FillColor = Color3.new(1, 1, 1) -- Pure white
+		highlight.FillTransparency = 0.25 -- Less transparent (whiter)
+		highlight.OutlineColor = Color3.new(1, 1, 1)
+		highlight.OutlineTransparency = 0.25
 		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 		highlight.Parent = character
 	end
 
-	-- BillboardGui for username
 	if not character:FindFirstChild("NameDisplay") then
 		local billboard = Instance.new("BillboardGui")
 		billboard.Name = "NameDisplay"
@@ -68,12 +66,12 @@ local function applyVisuals(character, player)
 		textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
 		textLabel.TextStrokeTransparency = 0
 		textLabel.TextScaled = true
-		textLabel.Font = Enum.Font.SourceSansBold
+		textLabel.Font = Enum.Font.SourceSans -- Not bold
 		textLabel.Parent = billboard
 	end
 end
 
--- Remove highlight and name display
+-- Remove visuals
 local function removeVisuals(character)
 	local h = character:FindFirstChild("WhiteHighlight")
 	if h then h:Destroy() end
@@ -123,7 +121,7 @@ end
 local Tab = Window:CreateTab("Universal", 4483362458)
 
 local Toggle = Tab:CreateToggle({
-   Name = "White Highlight + Name",
+   Name = "White Highlight + Username",
    CurrentValue = false,
    Flag = "HighlightToggle",
    Callback = function(Value)
