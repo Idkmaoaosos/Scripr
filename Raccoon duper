@@ -35,90 +35,89 @@ local Window = Rayfield:CreateWindow({
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local camera = workspace.CurrentCamera
 local connections = {}
 local Tab = Window:CreateTab("Universal", 4483362458)
 
 -- == White Highlight + Name Tag ==
 local function applyVisuals(character, player)
-	if not character:FindFirstChild("WhiteHighlight") then
-		local highlight = Instance.new("Highlight")
-		highlight.Name = "WhiteHighlight"
-		highlight.FillColor = Color3.new(1, 1, 1)
-		highlight.FillTransparency = 0.25
-		highlight.OutlineColor = Color3.new(1, 1, 1)
-		highlight.OutlineTransparency = 0.25
-		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		highlight.Parent = character
-	end
+   if not character:FindFirstChild("WhiteHighlight") then
+      local highlight = Instance.new("Highlight")
+      highlight.Name = "WhiteHighlight"
+      highlight.FillColor = Color3.new(1, 1, 1)
+      highlight.FillTransparency = 0.25
+      highlight.OutlineColor = Color3.new(1, 1, 1)
+      highlight.OutlineTransparency = 0.25
+      highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+      highlight.Parent = character
+   end
 
-	if not character:FindFirstChild("NameDisplay") then
-		local billboard = Instance.new("BillboardGui")
-		billboard.Name = "NameDisplay"
-		billboard.Size = UDim2.new(0, 200, 0, 25)
-		billboard.StudsOffset = Vector3.new(0, 3, 0)
-		billboard.AlwaysOnTop = true
-		billboard.Adornee = character:FindFirstChild("Head") or character:FindFirstChildWhichIsA("BasePart")
-		billboard.Parent = character
+   if not character:FindFirstChild("NameDisplay") then
+      local billboard = Instance.new("BillboardGui")
+      billboard.Name = "NameDisplay"
+      billboard.Size = UDim2.new(0, 200, 0, 25)
+      billboard.StudsOffset = Vector3.new(0, 3, 0)
+      billboard.AlwaysOnTop = true
+      billboard.Adornee = character:FindFirstChild("Head") or character:FindFirstChildWhichIsA("BasePart")
+      billboard.Parent = character
 
-		local textLabel = Instance.new("TextLabel")
-		textLabel.Size = UDim2.new(1, 0, 1, 0)
-		textLabel.BackgroundTransparency = 1
-		textLabel.Text = player.Name
-		textLabel.TextColor3 = Color3.new(1, 1, 1)
-		textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-		textLabel.TextStrokeTransparency = 0
-		textLabel.TextScaled = true
-		textLabel.Font = Enum.Font.SourceSans
-		textLabel.Parent = billboard
-	end
+      local textLabel = Instance.new("TextLabel")
+      textLabel.Size = UDim2.new(1, 0, 1, 0)
+      textLabel.BackgroundTransparency = 1
+      textLabel.Text = player.Name
+      textLabel.TextColor3 = Color3.new(1, 1, 1)
+      textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+      textLabel.TextStrokeTransparency = 0
+      textLabel.TextScaled = true
+      textLabel.Font = Enum.Font.SourceSans
+      textLabel.Parent = billboard
+   end
 end
 
 local function removeVisuals(character)
-	local h = character:FindFirstChild("WhiteHighlight")
-	if h then h:Destroy() end
+   local h = character:FindFirstChild("WhiteHighlight")
+   if h then h:Destroy() end
 
-	local label = character:FindFirstChild("NameDisplay")
-	if label then label:Destroy() end
+   local label = character:FindFirstChild("NameDisplay")
+   if label then label:Destroy() end
 end
 
 local function setHighlightEnabled(enabled)
-	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LocalPlayer then
-			if player.Character then
-				if enabled then
-					applyVisuals(player.Character, player)
-				else
-					removeVisuals(player.Character)
-				end
-			end
+   for _, player in ipairs(Players:GetPlayers()) do
+      if player ~= LocalPlayer then
+         if player.Character then
+            if enabled then
+               applyVisuals(player.Character, player)
+            else
+               removeVisuals(player.Character)
+            end
+         end
 
-			if enabled then
-				connections[player] = player.CharacterAdded:Connect(function(char)
-					applyVisuals(char, player)
-				end)
-			else
-				if connections[player] then
-					connections[player]:Disconnect()
-					connections[player] = nil
-				end
-			end
-		end
-	end
+         if enabled then
+            connections[player] = player.CharacterAdded:Connect(function(char)
+               applyVisuals(char, player)
+            end)
+         else
+            if connections[player] then
+               connections[player]:Disconnect()
+               connections[player] = nil
+            end
+         end
+      end
+   end
 
-	if enabled and not connections["_playerAdded"] then
-		connections["_playerAdded"] = Players.PlayerAdded:Connect(function(player)
-			if player ~= LocalPlayer then
-				connections[player] = player.CharacterAdded:Connect(function(char)
-					applyVisuals(char, player)
-				end)
-			end
-		end)
-	elseif not enabled and connections["_playerAdded"] then
-		connections["_playerAdded"]:Disconnect()
-		connections["_playerAdded"] = nil
-	end
+   if enabled and not connections["_playerAdded"] then
+      connections["_playerAdded"] = Players.PlayerAdded:Connect(function(player)
+         if player ~= LocalPlayer then
+            connections[player] = player.CharacterAdded:Connect(function(char)
+               applyVisuals(char, player)
+            end)
+         end
+      end)
+   elseif not enabled and connections["_playerAdded"] then
+      connections["_playerAdded"]:Disconnect()
+      connections["_playerAdded"] = nil
+   end
 end
 
 Tab:CreateToggle({
@@ -137,78 +136,78 @@ local espConnection = nil
 local espDrawings = {}
 
 local function clearESP()
-	for _, obj in ipairs(espDrawings) do
-		if obj then obj:Remove() end
-	end
-	table.clear(espDrawings)
+   for _, obj in ipairs(espDrawings) do
+      if obj then obj:Remove() end
+   end
+   table.clear(espDrawings)
 end
 
 local function updateESP()
-	clearESP()
+   clearESP()
 
-	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-			local hrp = player.Character.HumanoidRootPart
-			local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+   for _, player in ipairs(Players:GetPlayers()) do
+      if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+         local hrp = player.Character.HumanoidRootPart
+         local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
 
-			if onScreen then
-				if boxESPEnabled then
-					local size = Vector3.new(4, 6, 0)
-					local corners = {
-						Vector3.new(-size.X/2, size.Y/2, 0),
-						Vector3.new(size.X/2, size.Y/2, 0),
-						Vector3.new(size.X/2, -size.Y/2, 0),
-						Vector3.new(-size.X/2, -size.Y/2, 0)
-					}
+         if onScreen then
+            if boxESPEnabled then
+               local size = Vector3.new(4, 6, 0)
+               local corners = {
+                  Vector3.new(-size.X/2, size.Y/2, 0),
+                  Vector3.new(size.X/2, size.Y/2, 0),
+                  Vector3.new(size.X/2, -size.Y/2, 0),
+                  Vector3.new(-size.X/2, -size.Y/2, 0)
+               }
 
-					local screenCorners = {}
-					for _, corner in ipairs(corners) do
-						local world = hrp.CFrame:PointToWorldSpace(corner)
-						local screenCorner, _ = camera:WorldToViewportPoint(world)
-						table.insert(screenCorners, screenCorner)
-					end
+               local screenCorners = {}
+               for _, corner in ipairs(corners) do
+                  local world = hrp.CFrame:PointToWorldSpace(corner)
+                  local screenCorner, _ = camera:WorldToViewportPoint(world)
+                  table.insert(screenCorners, screenCorner)
+               end
 
-					for i = 1, #screenCorners do
-						local nextIndex = (i % #screenCorners) + 1
-						local line = Drawing.new("Line")
-						line.From = Vector2.new(screenCorners[i].X, screenCorners[i].Y)
-						line.To = Vector2.new(screenCorners[nextIndex].X, screenCorners[nextIndex].Y)
-						line.Color = Color3.new(1, 1, 1)
-						line.Thickness = 1.5
-						line.Transparency = 0.75
-						line.Visible = true
-						table.insert(espDrawings, line)
-					end
-				end
+               for i = 1, #screenCorners do
+                  local nextIndex = (i % #screenCorners) + 1
+                  local line = Drawing.new("Line")
+                  line.From = Vector2.new(screenCorners[i].X, screenCorners[i].Y)
+                  line.To = Vector2.new(screenCorners[nextIndex].X, screenCorners[nextIndex].Y)
+                  line.Color = Color3.new(1, 1, 1)
+                  line.Thickness = 1.5
+                  line.Transparency = 0.75
+                  line.Visible = true
+                  table.insert(espDrawings, line)
+               end
+            end
 
-				if tracerESPEnabled then
-					local line = Drawing.new("Line")
-					line.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
-					line.To = Vector2.new(screenPos.X, screenPos.Y)
-					line.Color = Color3.new(1, 1, 1)
-					line.Thickness = 1.5
-					line.Transparency = 0.75
-					line.Visible = true
-					table.insert(espDrawings, line)
-				end
-			end
-		end
-	end
+            if tracerESPEnabled then
+               local line = Drawing.new("Line")
+               line.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+               line.To = Vector2.new(screenPos.X, screenPos.Y)
+               line.Color = Color3.new(1, 1, 1)
+               line.Thickness = 1.5
+               line.Transparency = 0.75
+               line.Visible = true
+               table.insert(espDrawings, line)
+            end
+         end
+      end
+   end
 end
 
 local function handleESPLoop()
-	if not espConnection then
-		espConnection = RunService.RenderStepped:Connect(function()
-			updateESP()
-		end)
-	end
-	if not boxESPEnabled and not tracerESPEnabled then
-		if espConnection then
-			espConnection:Disconnect()
-			espConnection = nil
-			clearESP()
-		end
-	end
+   if not espConnection then
+      espConnection = RunService.RenderStepped:Connect(function()
+         updateESP()
+      end)
+   end
+   if not boxESPEnabled and not tracerESPEnabled then
+      if espConnection then
+         espConnection:Disconnect()
+         espConnection = nil
+         clearESP()
+      end
+   end
 end
 
 Tab:CreateToggle({
@@ -231,29 +230,27 @@ Tab:CreateToggle({
    end,
 })
 
--- Auto Clicker toggle
+-- Auto Clicker Toggle
 local autoClickerEnabled = false
 local autoClickerConnection
 
-Tab:CreateToggle({
-    Name = "Auto Clicker",
-    CurrentValue = false,
-    Flag = "AutoClicker",
-    Callback = function(Value)
-        autoClickerEnabled = Value
-        if autoClickerEnabled then
-            autoClickerConnection = RunService.Heartbeat:Connect(function()
-                -- Simulate a click at the center of the screen every frame
-                local mouse = game.Players.LocalPlayer:GetMouse()
-                mouse1press()
-                wait(0.01) -- Delay 0.01 seconds between clicks
-                mouse1release()
-            end)
-        else
-            if autoClickerConnection then
-                autoClickerConnection:Disconnect()
-                autoClickerConnection = nil
-            end
-        end
-    end,
+local AutoClickerToggle = Tab:CreateToggle({
+   Name = "Auto Clicker",
+   CurrentValue = false,
+   Flag = "AutoClicker",
+   Callback = function(Value)
+      autoClickerEnabled = Value
+      if autoClickerEnabled then
+         autoClickerConnection = RunService.Heartbeat:Connect(function()
+            mouse1press()
+            task.wait(0.01)
+            mouse1release()
+         end)
+      else
+         if autoClickerConnection then
+            autoClickerConnection:Disconnect()
+            autoClickerConnection = nil
+         end
+      end
+   end,
 })
