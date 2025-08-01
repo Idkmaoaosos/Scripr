@@ -34,6 +34,9 @@ local Window = Rayfield:CreateWindow({
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
 local connections = {}
 
 -- Add white highlight + name label
@@ -41,8 +44,8 @@ local function applyVisuals(character, player)
 	if not character:FindFirstChild("WhiteHighlight") then
 		local highlight = Instance.new("Highlight")
 		highlight.Name = "WhiteHighlight"
-		highlight.FillColor = Color3.new(1, 1, 1) -- Pure white
-		highlight.FillTransparency = 0.25 -- Less transparent (whiter)
+		highlight.FillColor = Color3.new(1, 1, 1)
+		highlight.FillTransparency = 0.25
 		highlight.OutlineColor = Color3.new(1, 1, 1)
 		highlight.OutlineTransparency = 0.25
 		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
@@ -52,7 +55,7 @@ local function applyVisuals(character, player)
 	if not character:FindFirstChild("NameDisplay") then
 		local billboard = Instance.new("BillboardGui")
 		billboard.Name = "NameDisplay"
-		billboard.Size = UDim2.new(0, 200, 0, 50)
+		billboard.Size = UDim2.new(0, 100, 0, 25)
 		billboard.StudsOffset = Vector3.new(0, 3, 0)
 		billboard.AlwaysOnTop = true
 		billboard.Adornee = character:FindFirstChild("Head") or character:FindFirstChildWhichIsA("BasePart")
@@ -65,8 +68,9 @@ local function applyVisuals(character, player)
 		textLabel.TextColor3 = Color3.new(1, 1, 1)
 		textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
 		textLabel.TextStrokeTransparency = 0
-		textLabel.TextScaled = true
-		textLabel.Font = Enum.Font.SourceSans -- Not bold
+		textLabel.TextScaled = false
+		textLabel.TextSize = 14
+		textLabel.Font = Enum.Font.SourceSans
 		textLabel.Parent = billboard
 	end
 end
@@ -120,11 +124,62 @@ end
 
 local Tab = Window:CreateTab("Universal", 4483362458)
 
+-- Highlight Toggle
 local Toggle = Tab:CreateToggle({
    Name = "White Highlight + Username",
    CurrentValue = false,
    Flag = "HighlightToggle",
    Callback = function(Value)
       setHighlightEnabled(Value)
+   end,
+})
+
+-- Tracer Toggle
+local tracerConnection = nil
+local tracerLines = {}
+
+local function clearTracers()
+	for _, line in ipairs(tracerLines) do
+		if line then
+			line:Remove()
+		end
+	end
+	table.clear(tracerLines)
+end
+
+local Toggle = Tab:CreateToggle({
+   Name = "Tracers",
+   CurrentValue = false,
+   Flag = "TracerToggle",
+   Callback = function(Value)
+      clearTracers()
+      if Value then
+         tracerConnection = RunService.RenderStepped:Connect(function()
+            clearTracers()
+            for _, player in ipairs(Players:GetPlayers()) do
+               if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+                  local head = player.Character.Head
+                  local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
+                  if onScreen then
+                     local line = Drawing.new("Line")
+                     line.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y) -- bottom-center
+                     line.To = Vector2.new(screenPos.X, screenPos.Y)
+                     line.Color = Color3.new(1, 1, 1)
+                     line.Thickness = 1.5
+                     line.Transparency = 0.75
+                     line.ZIndex = 1
+                     line.Visible = true
+                     table.insert(tracerLines, line)
+                  end
+               end
+            end
+         end)
+      else
+         if tracerConnection then
+            tracerConnection:Disconnect()
+            tracerConnection = nil
+         end
+         clearTracers()
+      end
    end,
 })
