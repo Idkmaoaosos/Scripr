@@ -36,10 +36,10 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local camera = workspace.CurrentCamera
-
 local connections = {}
+local Tab = Window:CreateTab("Universal", 4483362458)
 
--- Add white highlight + name label
+-- == White Highlight + Name Tag ==
 local function applyVisuals(character, player)
 	if not character:FindFirstChild("WhiteHighlight") then
 		local highlight = Instance.new("Highlight")
@@ -55,7 +55,7 @@ local function applyVisuals(character, player)
 	if not character:FindFirstChild("NameDisplay") then
 		local billboard = Instance.new("BillboardGui")
 		billboard.Name = "NameDisplay"
-		billboard.Size = UDim2.new(0, 100, 0, 25)
+		billboard.Size = UDim2.new(0, 200, 0, 25)
 		billboard.StudsOffset = Vector3.new(0, 3, 0)
 		billboard.AlwaysOnTop = true
 		billboard.Adornee = character:FindFirstChild("Head") or character:FindFirstChildWhichIsA("BasePart")
@@ -68,14 +68,12 @@ local function applyVisuals(character, player)
 		textLabel.TextColor3 = Color3.new(1, 1, 1)
 		textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
 		textLabel.TextStrokeTransparency = 0
-		textLabel.TextScaled = false
-		textLabel.TextSize = 14
+		textLabel.TextScaled = true
 		textLabel.Font = Enum.Font.SourceSans
 		textLabel.Parent = billboard
 	end
 end
 
--- Remove visuals
 local function removeVisuals(character)
 	local h = character:FindFirstChild("WhiteHighlight")
 	if h then h:Destroy() end
@@ -122,10 +120,7 @@ local function setHighlightEnabled(enabled)
 	end
 end
 
-local Tab = Window:CreateTab("Universal", 4483362458)
-
--- Highlight Toggle
-local Toggle = Tab:CreateToggle({
+Tab:CreateToggle({
    Name = "White Highlight + Username",
    CurrentValue = false,
    Flag = "HighlightToggle",
@@ -134,52 +129,81 @@ local Toggle = Tab:CreateToggle({
    end,
 })
 
--- Tracer Toggle
-local tracerConnection = nil
-local tracerLines = {}
+-- == Placeholder Toggle ==
+Tab:CreateToggle({
+   Name = "Toggle Example",
+   CurrentValue = false,
+   Flag = "Toggle1",
+   Callback = function(Value)
+   end,
+})
 
-local function clearTracers()
-	for _, line in ipairs(tracerLines) do
-		if line then
-			line:Remove()
-		end
+-- == Box ESP ==
+local boxESPConnection = nil
+local boxESPObjects = {}
+
+local function clearBoxESP()
+	for _, box in ipairs(boxESPObjects) do
+		if box then box:Remove() end
 	end
-	table.clear(tracerLines)
+	table.clear(boxESPObjects)
 end
 
-local Toggle = Tab:CreateToggle({
-   Name = "Tracers",
+Tab:CreateToggle({
+   Name = "Box ESP",
    CurrentValue = false,
-   Flag = "TracerToggle",
-   Callback = function(Value)
-      clearTracers()
-      if Value then
-         tracerConnection = RunService.RenderStepped:Connect(function()
-            clearTracers()
+   Flag = "BoxESP",
+   Callback = function(enabled)
+      clearBoxESP()
+
+      if enabled then
+         boxESPConnection = RunService.RenderStepped:Connect(function()
+            clearBoxESP()
             for _, player in ipairs(Players:GetPlayers()) do
-               if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-                  local head = player.Character.Head
-                  local screenPos, onScreen = camera:WorldToViewportPoint(head.Position)
-                  if onScreen then
-                     local line = Drawing.new("Line")
-                     line.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y) -- bottom-center
-                     line.To = Vector2.new(screenPos.X, screenPos.Y)
-                     line.Color = Color3.new(1, 1, 1)
-                     line.Thickness = 1.5
-                     line.Transparency = 0.75
-                     line.ZIndex = 1
-                     line.Visible = true
-                     table.insert(tracerLines, line)
+               if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                  local hrp = player.Character.HumanoidRootPart
+                  local size = Vector3.new(4, 6, 0)
+                  local corners = {
+                     Vector3.new(-size.X/2, size.Y/2, 0),
+                     Vector3.new(size.X/2, size.Y/2, 0),
+                     Vector3.new(size.X/2, -size.Y/2, 0),
+                     Vector3.new(-size.X/2, -size.Y/2, 0)
+                  }
+
+                  local screenCorners = {}
+                  local visible = true
+                  for i = 1, #corners do
+                     local world = hrp.CFrame:PointToWorldSpace(corners[i])
+                     local screenPos, onScreen = camera:WorldToViewportPoint(world)
+                     if not onScreen then
+                        visible = false
+                        break
+                     end
+                     screenCorners[i] = screenPos
+                  end
+
+                  if visible then
+                     for i = 1, #screenCorners do
+                        local nextIndex = (i % #screenCorners) + 1
+                        local line = Drawing.new("Line")
+                        line.From = Vector2.new(screenCorners[i].X, screenCorners[i].Y)
+                        line.To = Vector2.new(screenCorners[nextIndex].X, screenCorners[nextIndex].Y)
+                        line.Color = Color3.new(1, 1, 1)
+                        line.Thickness = 1.5
+                        line.Transparency = 0.75
+                        line.Visible = true
+                        table.insert(boxESPObjects, line)
+                     end
                   end
                end
             end
          end)
       else
-         if tracerConnection then
-            tracerConnection:Disconnect()
-            tracerConnection = nil
+         if boxESPConnection then
+            boxESPConnection:Disconnect()
+            boxESPConnection = nil
          end
-         clearTracers()
+         clearBoxESP()
       end
    end,
 })
