@@ -129,7 +129,7 @@ Tab:CreateToggle({
    end,
 })
 
--- == Placeholder Toggle ==
+-- Placeholder toggle
 Tab:CreateToggle({
    Name = "Toggle Example",
    CurrentValue = false,
@@ -138,72 +138,103 @@ Tab:CreateToggle({
    end,
 })
 
--- == Box ESP ==
-local boxESPConnection = nil
-local boxESPObjects = {}
+-- Combined Box ESP and Tracer ESP system
+local boxESPEnabled = false
+local tracerESPEnabled = false
+local espConnection = nil
+local espDrawings = {}
 
-local function clearBoxESP()
-	for _, box in ipairs(boxESPObjects) do
-		if box then box:Remove() end
+local function clearESP()
+	for _, obj in ipairs(espDrawings) do
+		if obj then obj:Remove() end
 	end
-	table.clear(boxESPObjects)
+	table.clear(espDrawings)
+end
+
+local function updateESP()
+	clearESP()
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			local hrp = player.Character.HumanoidRootPart
+			local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+
+			if onScreen then
+				if boxESPEnabled then
+					local size = Vector3.new(4, 6, 0)
+					local corners = {
+						Vector3.new(-size.X/2, size.Y/2, 0),
+						Vector3.new(size.X/2, size.Y/2, 0),
+						Vector3.new(size.X/2, -size.Y/2, 0),
+						Vector3.new(-size.X/2, -size.Y/2, 0)
+					}
+
+					local screenCorners = {}
+					for _, corner in ipairs(corners) do
+						local world = hrp.CFrame:PointToWorldSpace(corner)
+						local screenCorner, _ = camera:WorldToViewportPoint(world)
+						table.insert(screenCorners, screenCorner)
+					end
+
+					for i = 1, #screenCorners do
+						local nextIndex = (i % #screenCorners) + 1
+						local line = Drawing.new("Line")
+						line.From = Vector2.new(screenCorners[i].X, screenCorners[i].Y)
+						line.To = Vector2.new(screenCorners[nextIndex].X, screenCorners[nextIndex].Y)
+						line.Color = Color3.new(1, 1, 1)
+						line.Thickness = 1.5
+						line.Transparency = 0.75
+						line.Visible = true
+						table.insert(espDrawings, line)
+					end
+				end
+
+				if tracerESPEnabled then
+					local line = Drawing.new("Line")
+					line.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+					line.To = Vector2.new(screenPos.X, screenPos.Y)
+					line.Color = Color3.new(1, 1, 1)
+					line.Thickness = 1.5
+					line.Transparency = 0.75
+					line.Visible = true
+					table.insert(espDrawings, line)
+				end
+			end
+		end
+	end
+end
+
+local function handleESPLoop()
+	if not espConnection then
+		espConnection = RunService.RenderStepped:Connect(function()
+			updateESP()
+		end)
+	end
+	if not boxESPEnabled and not tracerESPEnabled then
+		if espConnection then
+			espConnection:Disconnect()
+			espConnection = nil
+			clearESP()
+		end
+	end
 end
 
 Tab:CreateToggle({
    Name = "Box ESP",
    CurrentValue = false,
    Flag = "BoxESP",
-   Callback = function(enabled)
-      clearBoxESP()
+   Callback = function(Value)
+      boxESPEnabled = Value
+      handleESPLoop()
+   end,
+})
 
-      if enabled then
-         boxESPConnection = RunService.RenderStepped:Connect(function()
-            clearBoxESP()
-            for _, player in ipairs(Players:GetPlayers()) do
-               if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                  local hrp = player.Character.HumanoidRootPart
-                  local size = Vector3.new(4, 6, 0)
-                  local corners = {
-                     Vector3.new(-size.X/2, size.Y/2, 0),
-                     Vector3.new(size.X/2, size.Y/2, 0),
-                     Vector3.new(size.X/2, -size.Y/2, 0),
-                     Vector3.new(-size.X/2, -size.Y/2, 0)
-                  }
-
-                  local screenCorners = {}
-                  local visible = true
-                  for i = 1, #corners do
-                     local world = hrp.CFrame:PointToWorldSpace(corners[i])
-                     local screenPos, onScreen = camera:WorldToViewportPoint(world)
-                     if not onScreen then
-                        visible = false
-                        break
-                     end
-                     screenCorners[i] = screenPos
-                  end
-
-                  if visible then
-                     for i = 1, #screenCorners do
-                        local nextIndex = (i % #screenCorners) + 1
-                        local line = Drawing.new("Line")
-                        line.From = Vector2.new(screenCorners[i].X, screenCorners[i].Y)
-                        line.To = Vector2.new(screenCorners[nextIndex].X, screenCorners[nextIndex].Y)
-                        line.Color = Color3.new(1, 1, 1)
-                        line.Thickness = 1.5
-                        line.Transparency = 0.75
-                        line.Visible = true
-                        table.insert(boxESPObjects, line)
-                     end
-                  end
-               end
-            end
-         end)
-      else
-         if boxESPConnection then
-            boxESPConnection:Disconnect()
-            boxESPConnection = nil
-         end
-         clearBoxESP()
-      end
+Tab:CreateToggle({
+   Name = "Tracer ESP",
+   CurrentValue = false,
+   Flag = "TracerESP",
+   Callback = function(Value)
+      tracerESPEnabled = Value
+      handleESPLoop()
    end,
 })
