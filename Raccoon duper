@@ -34,44 +34,68 @@ local Window = Rayfield:CreateWindow({
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local connections = {} -- Store CharacterAdded connections
+local connections = {}
 
--- Add red highlight
-local function applyHighlight(character)
-	if not character:FindFirstChild("RedHighlight") then
+-- Add highlight and username display
+local function applyVisuals(character, player)
+	-- Highlight
+	if not character:FindFirstChild("WhiteHighlight") then
 		local highlight = Instance.new("Highlight")
-		highlight.Name = "RedHighlight"
-		highlight.FillColor = Color3.new(1, 0, 0)
+		highlight.Name = "WhiteHighlight"
+		highlight.FillColor = Color3.new(1, 1, 1) -- White
+		highlight.FillTransparency = 0.75
 		highlight.OutlineColor = Color3.new(0, 0, 0)
+		highlight.OutlineTransparency = 0.75
 		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 		highlight.Parent = character
 	end
-end
 
--- Remove red highlight
-local function removeHighlight(character)
-	local h = character:FindFirstChild("RedHighlight")
-	if h then
-		h:Destroy()
+	-- BillboardGui for username
+	if not character:FindFirstChild("NameDisplay") then
+		local billboard = Instance.new("BillboardGui")
+		billboard.Name = "NameDisplay"
+		billboard.Size = UDim2.new(0, 200, 0, 50)
+		billboard.StudsOffset = Vector3.new(0, 3, 0)
+		billboard.AlwaysOnTop = true
+		billboard.Adornee = character:FindFirstChild("Head") or character:FindFirstChildWhichIsA("BasePart")
+		billboard.Parent = character
+
+		local textLabel = Instance.new("TextLabel")
+		textLabel.Size = UDim2.new(1, 0, 1, 0)
+		textLabel.BackgroundTransparency = 1
+		textLabel.Text = player.Name
+		textLabel.TextColor3 = Color3.new(1, 1, 1)
+		textLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+		textLabel.TextStrokeTransparency = 0
+		textLabel.TextScaled = true
+		textLabel.Font = Enum.Font.SourceSansBold
+		textLabel.Parent = billboard
 	end
 end
 
--- Enable/Disable function
+-- Remove highlight and name display
+local function removeVisuals(character)
+	local h = character:FindFirstChild("WhiteHighlight")
+	if h then h:Destroy() end
+
+	local label = character:FindFirstChild("NameDisplay")
+	if label then label:Destroy() end
+end
+
 local function setHighlightEnabled(enabled)
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player ~= LocalPlayer then
 			if player.Character then
 				if enabled then
-					applyHighlight(player.Character)
+					applyVisuals(player.Character, player)
 				else
-					removeHighlight(player.Character)
+					removeVisuals(player.Character)
 				end
 			end
 
 			if enabled then
-				-- Store the connection to disconnect later
 				connections[player] = player.CharacterAdded:Connect(function(char)
-					applyHighlight(char)
+					applyVisuals(char, player)
 				end)
 			else
 				if connections[player] then
@@ -82,12 +106,11 @@ local function setHighlightEnabled(enabled)
 		end
 	end
 
-	-- Listen to future players
 	if enabled and not connections["_playerAdded"] then
 		connections["_playerAdded"] = Players.PlayerAdded:Connect(function(player)
 			if player ~= LocalPlayer then
 				connections[player] = player.CharacterAdded:Connect(function(char)
-					applyHighlight(char)
+					applyVisuals(char, player)
 				end)
 			end
 		end)
@@ -100,9 +123,9 @@ end
 local Tab = Window:CreateTab("Universal", 4483362458)
 
 local Toggle = Tab:CreateToggle({
-   Name = "Highlight",
+   Name = "White Highlight + Name",
    CurrentValue = false,
-   Flag = "Toggle1",
+   Flag = "HighlightToggle",
    Callback = function(Value)
       setHighlightEnabled(Value)
    end,
