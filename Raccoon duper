@@ -16,19 +16,19 @@ local Window = Rayfield:CreateWindow({
       FileName = "Big Hub"
    },
    Discord = {
-      Enabled = false,
-      Invite = "noinvitelink",
+      Enabled = true,
+      Invite = "https://discord.gg/CuD77Ag6En",
       RememberJoins = true
    },
-   KeySystem = false,
+   KeySystem = true,
    KeySettings = {
-      Title = "Untitled",
+      Title = "rin hub key",
       Subtitle = "Key System",
-      Note = "No method of obtaining the key is provided",
+      Note = "discord server has been copied to ur clipboard get key from there",
       FileName = "Key",
       SaveKey = true,
       GrabKeyFromSite = false,
-      Key = {"Hello"}
+      Key = {"RINVW"}
    }
 })
 
