@@ -39,6 +39,13 @@ local camera = workspace.CurrentCamera
 local connections = {}
 local Tab = Window:CreateTab("Universal", 4483362458)
 
+-- ✅ Say "hi" in chat after UI is created
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ChatEvent = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+if ChatEvent and ChatEvent:FindFirstChild("SayMessageRequest") then
+   ChatEvent.SayMessageRequest:FireServer("hi", "All")
+end
+
 -- == White Highlight + Name Tag ==
 local function applyVisuals(character, player)
    if not character:FindFirstChild("WhiteHighlight") then
@@ -234,7 +241,7 @@ Tab:CreateToggle({
 local autoClickerEnabled = false
 local autoClickerConnection
 
-local AutoClickerToggle = Tab:CreateToggle({
+Tab:CreateToggle({
    Name = "Auto Clicker",
    CurrentValue = false,
    Flag = "AutoClicker",
